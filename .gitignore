@@ -1,0 +1,18 @@
+# Environment Variables
+.env
+*.env
+backend/.env
+
+# Flutter / Dart
+app/.dart_tool/
+app/.pub/
+app/.pub-cache/
+app/build/
+app/ephemeral/
+app/flutter_bootstrap.js
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

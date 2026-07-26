@@ -1,0 +1,172 @@
+basePath: /
+definitions:
+  handlers.ChatRequest:
+    properties:
+      dispositivo_id:
+        type: string
+      pregunta:
+        type: string
+    required:
+    - dispositivo_id
+    - pregunta
+    type: object
+  handlers.CreateTramiteRequest:
+    properties:
+      costo:
+        type: string
+      documento_contexto:
+        type: string
+      horario:
+        type: string
+      institucion_id:
+        type: integer
+      nombre:
+        type: string
+      palabras_clave:
+        items:
+          type: string
+        type: array
+      requisitos:
+        items:
+          type: string
+        type: array
+    required:
+    - documento_contexto
+    - nombre
+    type: object
+  handlers.LoginRequest:
+    properties:
+      nombre_usuario:
+        type: string
+      password:
+        type: string
+    required:
+    - nombre_usuario
+    - password
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API para el asistente conversacional de trámites públicos en Bolivia.
+  title: Mi Trámite Bolivia API
+  version: "1.0"
+paths:
+  /api/admin/tramites:
+    post:
+      consumes:
+      - application/json
+      description: Inserta un nuevo trámite en la BD y genera su embedding vectorizado.
+        Requiere JWT.
+      parameters:
+      - description: Datos del trámite
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateTramiteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Crear un trámite
+      tags:
+      - Tramites
+  /api/chat:
+    post:
+      consumes:
+      - application/json
+      description: Busca el contexto en PostgreSQL (pgvector) y genera una respuesta
+        con Gemini.
+      parameters:
+      - description: Consulta del usuario
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ChatRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Chat interactivo RAG
+      tags:
+      - Chat
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica a un administrador y retorna un token JWT
+      parameters:
+      - description: Credenciales de administrador
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Login de administrador
+      tags:
+      - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
