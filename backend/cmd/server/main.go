@@ -99,7 +99,21 @@ func main() {
 
 	r.Use(middleware.RateLimitMiddleware())
 
-	// ─── Health checks ──────────────────────────────────────────────────────────
+	// ─── Root & Health checks ───────────────────────────────────────────────────
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"servicio": "API REST Mi Trámite Bolivia",
+			"estado":   "activo",
+			"version":  "v1.0",
+			"endpoints": gin.H{
+				"health_live":  "/health/live",
+				"health_ready": "/health/ready",
+				"tramites":     "/api/v1/tramites",
+				"categorias":   "/api/v1/categorias",
+				"swagger":      "/swagger/index.html",
+			},
+		})
+	})
 	r.GET("/health/live", handlers.HealthLive)
 	r.GET("/health/ready", handlers.HealthReady)
 
