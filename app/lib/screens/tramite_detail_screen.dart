@@ -337,16 +337,32 @@ class _TramiteDetailScreenState extends State<TramiteDetailScreen> with SingleTi
                               ),
                               if (oficina.direccion != null) ...[
                                 const SizedBox(height: 6),
-                                Text(
-                                  '📍 ${oficina.direccion}',
-                                  style: const TextStyle(fontSize: 13),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on_outlined, size: 16, color: AppTheme.iosLightSubtext),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        oficina.direccion!,
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                               if (oficina.horario != null) ...[
                                 const SizedBox(height: 4),
-                                Text(
-                                  '🕒 ${oficina.horario}',
-                                  style: const TextStyle(fontSize: 12.5, color: Colors.grey),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.access_time_rounded, size: 15, color: AppTheme.iosLightSubtext),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        oficina.horario!,
+                                        style: const TextStyle(fontSize: 12.5, color: AppTheme.iosLightSubtext),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                               const SizedBox(height: 10),

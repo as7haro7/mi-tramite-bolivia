@@ -451,12 +451,12 @@ class ApiService {
 
   static List<Categoria> _getFallbackCategorias() {
     return [
-      Categoria(id: 1, codigo: 'identidad', nombre: 'Identidad y Documentos', icono: '🪪'),
-      Categoria(id: 2, codigo: 'negocio', nombre: 'Empresas y Comercio', icono: '🏢'),
-      Categoria(id: 3, codigo: 'impuestos', nombre: 'Impuestos y Tributos', icono: '🏛️'),
-      Categoria(id: 4, codigo: 'vehiculos', nombre: 'Vehículos y Licencias', icono: '🚗'),
-      Categoria(id: 5, codigo: 'salud', nombre: 'Salud y Seguridad Social', icono: '🏥'),
-      Categoria(id: 6, codigo: 'educacion', nombre: 'Educación y Títulos', icono: '🎓'),
+      Categoria(id: 1, codigo: 'identidad', nombre: 'Identidad y Documentos', icono: null),
+      Categoria(id: 2, codigo: 'negocio', nombre: 'Empresas y Comercio', icono: null),
+      Categoria(id: 3, codigo: 'impuestos', nombre: 'Impuestos y Tributos', icono: null),
+      Categoria(id: 4, codigo: 'vehiculos', nombre: 'Vehículos y Licencias', icono: null),
+      Categoria(id: 5, codigo: 'salud', nombre: 'Salud y Seguridad Social', icono: null),
+      Categoria(id: 6, codigo: 'educacion', nombre: 'Educación y Títulos', icono: null),
     ];
   }
 

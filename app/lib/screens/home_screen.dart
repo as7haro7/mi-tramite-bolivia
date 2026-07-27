@@ -53,6 +53,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  IconData _getCategoryIconData(String codigo) {
+    switch (codigo.toLowerCase()) {
+      case 'identidad':
+        return CupertinoIcons.person_crop_square;
+      case 'negocio':
+        return CupertinoIcons.briefcase;
+      case 'impuestos':
+        return CupertinoIcons.doc_plaintext;
+      case 'vehiculos':
+        return CupertinoIcons.car_detailed;
+      case 'salud':
+        return CupertinoIcons.heart;
+      case 'educacion':
+        return CupertinoIcons.book;
+      default:
+        return CupertinoIcons.folder;
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -311,7 +330,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                             child: Row(
                               children: [
-                                Text(cat.icono ?? '📁', style: const TextStyle(fontSize: 14)),
+                                Icon(
+                                  _getCategoryIconData(cat.codigo),
+                                  size: 16,
+                                  color: AppTheme.tintColor,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   cat.nombre,
