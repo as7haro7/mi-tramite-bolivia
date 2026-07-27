@@ -2,8 +2,13 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Base URL resolution for Web, Android Emulator, and Desktop/iOS
+  // Base URL resolution for Web, Mobile, and Production Cloud (Render)
   static String get baseUrl {
+    const customUrl = String.fromEnvironment('BACKEND_URL');
+    if (customUrl.isNotEmpty) {
+      return customUrl;
+    }
+    
     if (kIsWeb) {
       return 'http://localhost:8080';
     }
@@ -14,7 +19,7 @@ class ApiConfig {
     return 'http://localhost:8080';
   }
 
-  static const Duration timeout = Duration(seconds: 12);
+  static const Duration timeout = Duration(seconds: 15);
 
   // Endpoint routes
   static const String tramites = '/api/v1/tramites';
