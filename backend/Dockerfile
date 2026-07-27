@@ -1,7 +1,5 @@
-# Build stage
-FROM golang:1.23-alpine AS builder
-
-ENV GOTOOLCHAIN=auto
+# Build stage (using official Go Alpine latest image)
+FROM golang:alpine AS builder
 
 WORKDIR /app
 
