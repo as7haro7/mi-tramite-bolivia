@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'models/tramite.dart';
@@ -14,18 +16,26 @@ import 'screens/premium_plan_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/saved_screen.dart';
 import 'screens/search_results_screen.dart';
+import 'screens/splash_screen.dart';
 import 'screens/tramite_detail_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
 import 'widgets/floating_assistant_button.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Inicializar Google Mobile Ads solo en plataformas móviles
+  if (!kIsWeb) {
+    await MobileAds.instance.initialize();
+  }
+  
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
     ),
   );
+  
   runApp(
     MultiProvider(
       providers: [
@@ -64,11 +74,19 @@ class MainNavigationWrapper extends StatefulWidget {
 
 class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
   int _currentIndex = 0;
+  bool _showingSplash = true;
   bool _showingOnboarding = false;
 
   @override
   void initState() {
     super.initState();
+    // No verificar onboarding aquí, esperar a que termine el splash
+  }
+
+  void _onSplashComplete() {
+    setState(() {
+      _showingSplash = false;
+    });
     _checkOnboarding();
   }
 
@@ -163,6 +181,12 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
   Widget build(BuildContext context) {
     final appProvider = Provider.of<AppProvider>(context);
 
+    // Mostrar splash screen primero
+    if (_showingSplash) {
+      return SplashScreen(onComplete: _onSplashComplete);
+    }
+
+    // Luego mostrar onboarding si es necesario
     if (_showingOnboarding && !appProvider.onboardingCompleted) {
       return OnboardingScreen(
         onFinish: () {

@@ -4,6 +4,7 @@ import '../config/theme.dart';
 import '../providers/app_provider.dart';
 import '../providers/assistant_provider.dart';
 import '../widgets/source_card.dart';
+import '../widgets/typing_indicator.dart';
 
 class AssistantScreen extends StatefulWidget {
   final bool isBottomSheet;
@@ -43,7 +44,14 @@ class _AssistantScreenState extends State<AssistantScreen> {
     final provider = Provider.of<AssistantProvider>(context, listen: false);
     provider.sendMessage(text, city: city);
     _textController.clear();
+    
+    // Scroll inicial para mostrar mensaje del usuario
     _scrollToBottom();
+    
+    // Segundo scroll después de un frame para mostrar typing indicator
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _scrollToBottom();
+    });
   }
 
   Widget _buildFormattedText(String text, TextStyle baseStyle) {
@@ -138,8 +146,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: assistant.messages.length,
+              itemCount: assistant.messages.length + (assistant.isLoading ? 1 : 0),
               itemBuilder: (context, index) {
+                // Mostrar typing indicator al final cuando está cargando
+                if (index == assistant.messages.length) {
+                  return const TypingIndicator();
+                }
+                
                 final msg = assistant.messages[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),

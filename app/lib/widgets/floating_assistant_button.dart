@@ -45,13 +45,13 @@ class FloatingAssistantButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
+        color: AppTheme.tintColor,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryViolet.withAlpha(80),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: AppTheme.tintColor.withAlpha(40),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),

@@ -17,17 +17,13 @@ class PremiumCtaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF0F9F8F)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.tintColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: AppTheme.primaryBlue.withAlpha(60),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -48,8 +44,8 @@ class PremiumCtaCard extends StatelessWidget {
                   ),
                   child: const Icon(
                     Icons.workspace_premium_rounded,
-                    color: Colors.amberAccent,
-                    size: 28,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -65,23 +61,21 @@ class PremiumCtaCard extends StatelessWidget {
                           fontSize: 15,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
                         subtitle,
                         style: TextStyle(
                           color: Colors.white.withAlpha(220),
-                          fontSize: 12,
-                          height: 1.2,
+                          fontSize: 12.5,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
                 const Icon(
-                  Icons.arrow_forward_ios_rounded,
+                  Icons.chevron_right_rounded,
                   color: Colors.white,
-                  size: 16,
+                  size: 20,
                 ),
               ],
             ),

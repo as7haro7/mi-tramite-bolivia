@@ -2,14 +2,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../config/ad_config.dart';
 import '../config/theme.dart';
 import '../models/categoria.dart';
 import '../models/tramite.dart';
 import '../providers/app_provider.dart';
 import '../providers/checklist_provider.dart';
 import '../services/api_service.dart';
+import '../services/error_handler.dart';
+import '../widgets/ad_banner_widget.dart';
 import '../widgets/disclaimer_banner.dart';
 import '../widgets/premium_cta_card.dart';
+import '../widgets/predictive_search_field.dart';
+import '../widgets/shimmer_loading.dart';
 import '../widgets/tramite_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,7 +36,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _searchController = TextEditingController();
   List<Categoria> _categorias = [];
   List<Tramite> _tramitesFrecuentes = [];
   bool _isLoading = true;
@@ -44,13 +48,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final cats = await ApiService.getCategorias();
-    final trs = await ApiService.getTramites();
-    setState(() {
-      _categorias = cats;
-      _tramitesFrecuentes = trs;
-      _isLoading = false;
-    });
+    
+    try {
+      final cats = await ApiService.getCategorias();
+      final trs = await ApiService.getTramites();
+      
+      if (mounted) {
+        setState(() {
+          _categorias = cats;
+          _tramitesFrecuentes = trs;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        // No mostramos SnackBar en carga inicial, solo en UI
+      }
+    }
+  }
+
+  Future<void> _handleRefresh() async {
+    try {
+      final cats = await ApiService.getCategorias();
+      final trs = await ApiService.getTramites();
+      
+      setState(() {
+        _categorias = cats;
+        _tramitesFrecuentes = trs;
+      });
+      
+      if (mounted) {
+        ErrorHandler.showSuccess(context, 'Datos actualizados');
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.showError(
+          context,
+          ErrorHandler.parseError(e),
+          onRetry: _handleRefresh,
+        );
+      }
+    }
   }
 
   IconData _getCategoryIconData(String codigo) {
@@ -74,7 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -88,9 +126,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          color: AppTheme.primaryBlue,
+          backgroundColor: Colors.white,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
             // iOS Cupertino Large Title Navigation Bar Header
             SliverToBoxAdapter(
               child: Padding(
@@ -157,47 +199,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   const DisclaimerBanner(isCompact: true),
                   const SizedBox(height: 14),
 
-                  // iOS HIG Search Bar (Block Design - Light Mode)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.iosLightSearchBg,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    child: Row(
-                      children: [
-                        const Icon(CupertinoIcons.search, color: AppTheme.iosLightSubtext, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            onSubmitted: (val) {
-                              HapticFeedback.lightImpact();
-                              widget.onSearchSubmitted(val);
-                            },
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppTheme.iosLightText,
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: 'Buscar trámites, licencias, NIT...',
-                              hintStyle: TextStyle(color: AppTheme.iosLightSubtext, fontSize: 16),
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                        ),
-                        if (_searchController.text.isNotEmpty)
-                          GestureDetector(
-                            onTap: () {
-                              _searchController.clear();
-                              setState(() {});
-                            },
-                            child: const Icon(CupertinoIcons.clear_thick_circled, color: AppTheme.iosLightSubtext, size: 18),
-                          ),
-                      ],
-                    ),
+                  // iOS HIG Search Bar con Autocompletado Predictivo
+                  PredictiveSearchField(
+                    hintText: 'Buscar trámites, licencias, NIT...',
+                    onSubmitted: (query) {
+                      HapticFeedback.lightImpact();
+                      widget.onSearchSubmitted(query);
+                    },
+                    onTramiteSelected: (tramite) {
+                      HapticFeedback.lightImpact();
+                      widget.onSelectTramite(tramite);
+                    },
                   ),
                   const SizedBox(height: 18),
 
@@ -308,58 +320,73 @@ class _HomeScreenState extends State<HomeScreen> {
                   PremiumCtaCard(onTap: widget.onOpenPremium),
                   const SizedBox(height: 20),
 
+                  // Ad Banner después del CTA Premium
+                  if (AdConfig.shouldShowAds)
+                    LabeledAdBanner(
+                      adUnitId: AdConfig.bannerAdUnitId,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+
                   // Categories Header
                   Text('Categorías', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 10),
-                  SizedBox(
-                    height: 38,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _categorias.length,
-                      itemBuilder: (context, index) {
-                        final cat = _categorias[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: CupertinoButton(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            color: isDark ? AppTheme.iosDarkSearchBg : AppTheme.iosLightSearchBg,
-                            borderRadius: BorderRadius.circular(18),
-                            onPressed: () {
-                              HapticFeedback.lightImpact();
-                              widget.onSearchSubmitted(cat.nombre);
-                            },
-                            child: Row(
-                              children: [
-                                Icon(
-                                  _getCategoryIconData(cat.codigo),
-                                  size: 16,
-                                  color: AppTheme.tintColor,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  cat.nombre,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark ? AppTheme.iosDarkText : AppTheme.iosLightText,
+                  if (_isLoading)
+                    const CategoryChipShimmer()
+                  else
+                    SizedBox(
+                      height: 38,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categorias.length,
+                        itemBuilder: (context, index) {
+                          final cat = _categorias[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: CupertinoButton(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              color: isDark ? AppTheme.iosDarkSearchBg : AppTheme.iosLightSearchBg,
+                              borderRadius: BorderRadius.circular(18),
+                              onPressed: () {
+                                HapticFeedback.lightImpact();
+                                widget.onSearchSubmitted(cat.nombre);
+                              },
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _getCategoryIconData(cat.codigo),
+                                    size: 16,
+                                    color: AppTheme.tintColor,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    cat.nombre,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? AppTheme.iosDarkText : AppTheme.iosLightText,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 24),
 
                   // Frequent Trámites Header
                   Text('Trámites Frecuentes', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 12),
                   if (_isLoading)
-                    const Padding(padding: EdgeInsets.all(20), child: Center(child: CupertinoActivityIndicator()))
+                    ...List.generate(3, (index) => const TramiteCardShimmer())
                   else if (_tramitesFrecuentes.isEmpty)
-                    const Text('No hay trámites en la base de datos.')
+                    const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text('No hay trámites en la base de datos.'),
+                      ),
+                    )
                   else
                     Column(
                       children: _tramitesFrecuentes.map((t) {
@@ -376,6 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

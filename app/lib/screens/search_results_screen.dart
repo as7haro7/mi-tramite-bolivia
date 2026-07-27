@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import '../models/tramite.dart';
 import '../services/api_service.dart';
+import '../widgets/predictive_search_field.dart';
 import '../widgets/tramite_card.dart';
+import '../widgets/shimmer_loading.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
@@ -34,14 +37,18 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   Future<void> _performSearch(String query) async {
     setState(() => _isLoading = true);
-    final results = await ApiService.getTramites(
+    final list = await ApiService.getTramites(
       query: query,
-      modalidad: _selectedModalidad == 'todas' ? null : _selectedModalidad,
+      modalidad: _selectedModalidad,
     );
     setState(() {
-      _results = results;
+      _results = list;
       _isLoading = false;
     });
+  }
+
+  Future<void> _handleRefresh() async {
+    return _performSearch(_searchController.text);
   }
 
   @override
@@ -62,25 +69,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                TextField(
+                PredictiveSearchFieldCompact(
                   controller: _searchController,
+                  hintText: 'Buscar por trámite, sigla o institución...',
                   onSubmitted: _performSearch,
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por trámite, sigla o institución...',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.clear_rounded),
-                      onPressed: () {
-                        _searchController.clear();
-                        _performSearch('');
-                      },
-                    ),
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
+                  onTramiteSelected: (tramite) {
+                    widget.onSelectTramite(tramite);
+                  },
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -125,41 +120,52 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _results.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.search_off_rounded, size: 60, color: Colors.grey),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No encontramos un trámite verificado para "${_searchController.text}".',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.titleMedium,
+            child: RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: AppTheme.primaryBlue,
+              child: _isLoading
+                  ? ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: 4,
+                      itemBuilder: (context, index) => const TramiteCardShimmer(),
+                    )
+                  : _results.isEmpty
+                      ? SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.search_off_rounded, size: 60, color: Colors.grey),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No encontramos un trámite verificado para "${_searchController.text}".',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 20),
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.auto_awesome_rounded),
+                                  label: const Text('Preguntar al Asistente IA'),
+                                  onPressed: widget.onOpenAssistant,
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 20),
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.auto_awesome_rounded),
-                              label: const Text('Preguntar al Asistente IA'),
-                              onPressed: widget.onOpenAssistant,
-                            ),
-                          ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _results.length,
+                          itemBuilder: (context, index) {
+                            final item = _results[index];
+                            return TramiteCard(
+                              tramite: item,
+                              onTap: () => widget.onSelectTramite(item),
+                            );
+                          },
                         ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _results.length,
-                        itemBuilder: (context, index) {
-                          final item = _results[index];
-                          return TramiteCard(
-                            tramite: item,
-                            onTap: () => widget.onSelectTramite(item),
-                          );
-                        },
-                      ),
+            ),
           ),
         ],
       ),

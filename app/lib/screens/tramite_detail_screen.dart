@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../config/ad_config.dart';
 import '../config/theme.dart';
 import '../models/tramite.dart';
 import '../providers/checklist_provider.dart';
 import '../providers/favorites_provider.dart';
+import '../widgets/ad_banner_widget.dart';
 import '../widgets/cost_card.dart';
 import '../widgets/disclaimer_banner.dart';
 import '../widgets/source_card.dart';
@@ -224,6 +226,14 @@ class _TramiteDetailScreenState extends State<TramiteDetailScreen> with SingleTi
                           ),
                         );
                       }),
+                    // Banner publicitario al final de Requisitos
+                    if (AdConfig.shouldShowAds) ...[
+                      const SizedBox(height: 8),
+                      LabeledAdBanner(
+                        adUnitId: AdConfig.bannerAdUnitId,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                    ],
                   ],
                 ),
 

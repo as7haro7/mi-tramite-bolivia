@@ -64,10 +64,10 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
+                color: AppTheme.tintColor,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: AppTheme.primaryBlue.withAlpha(80), blurRadius: 16, offset: const Offset(0, 6)),
+                  BoxShadow(color: AppTheme.tintColor.withAlpha(40), blurRadius: 10, offset: const Offset(0, 4)),
                 ],
               ),
               child: const Icon(

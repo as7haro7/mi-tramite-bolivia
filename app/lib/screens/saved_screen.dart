@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/ad_config.dart';
 import '../config/theme.dart';
 import '../models/tramite.dart';
 import '../providers/checklist_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../services/api_service.dart';
+import '../widgets/ad_banner_widget.dart';
 import '../widgets/premium_cta_card.dart';
+import '../widgets/shimmer_loading.dart';
 import '../widgets/tramite_card.dart';
 import 'checklist_screen.dart';
 
@@ -165,6 +168,14 @@ class _SavedScreenState extends State<SavedScreen> with SingleTickerProviderStat
                     ),
                   );
                 }),
+              // Banner publicitario en la sección de checklists
+              if (AdConfig.shouldShowAds && checklists.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                LabeledAdBanner(
+                  adUnitId: AdConfig.bannerAdUnitId,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              ],
             ],
           ),
 
@@ -175,7 +186,7 @@ class _SavedScreenState extends State<SavedScreen> with SingleTickerProviderStat
               padding: const EdgeInsets.all(16),
               children: [
                 if (_isLoading)
-                  const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator()))
+                  ...List.generate(4, (index) => const TramiteCardShimmer())
                 else if (_favoriteTramites.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(32.0),
@@ -203,6 +214,14 @@ class _SavedScreenState extends State<SavedScreen> with SingleTickerProviderStat
                       onTap: () => widget.onSelectTramite(t),
                     );
                   }),
+                // Banner publicitario en favoritos
+                if (AdConfig.shouldShowAds && _favoriteTramites.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  LabeledAdBanner(
+                    adUnitId: AdConfig.bannerAdUnitId,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ],
               ],
             ),
           ),
