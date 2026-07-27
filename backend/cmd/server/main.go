@@ -64,19 +64,37 @@ func main() {
 	// CORS — en producción solo orígenes de la config; en desarrollo permite todos
 	var corsConfig cors.Config
 	if cfg.Environment == "production" {
-		corsConfig = cors.Config{
-			AllowOrigins:     cfg.CORSOrigins,
-			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-			AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Request-ID"},
-			ExposeHeaders:    []string{"X-Request-ID"},
-			AllowCredentials: false,
-			MaxAge:           12 * time.Hour,
+		hasAllOrigins := false
+		var cleanOrigins []string
+		for _, o := range cfg.CORSOrigins {
+			o = strings.TrimSpace(o)
+			if o == "*" {
+				hasAllOrigins = true
+				break
+			}
+			if strings.HasPrefix(o, "http://") || strings.HasPrefix(o, "https://") {
+				cleanOrigins = append(cleanOrigins, o)
+			}
+		}
+
+		if hasAllOrigins || len(cleanOrigins) == 0 {
+			corsConfig = cors.DefaultConfig()
+			corsConfig.AllowAllOrigins = true
+		} else {
+			corsConfig = cors.Config{
+				AllowOrigins:     cleanOrigins,
+				AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+				AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Request-ID"},
+				ExposeHeaders:    []string{"X-Request-ID"},
+				AllowCredentials: false,
+				MaxAge:           12 * time.Hour,
+			}
 		}
 	} else {
 		corsConfig = cors.DefaultConfig()
 		corsConfig.AllowAllOrigins = true
-		corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "X-Request-ID"}
 	}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "X-Request-ID"}
 	r.Use(cors.New(corsConfig))
 
 	r.Use(middleware.RateLimitMiddleware())
